@@ -28,10 +28,9 @@ TODO_DESCRIPTION. Web application / dApp.
 - Web3: TODO (ethers.js / @polkadot/api patterns)
 
 ## Gotchas
-- TODO: project-specific pitfalls (e.g. wallet connection edge cases, SSR hydration, env vars prefix)
+- TODO: e.g. CORS on local dev, hydration mismatch with SSR, wallet popup blocked by browser, env var prefix (VITE_ / NEXT_PUBLIC_)
 
 ## Rules
-- NEVER commit node_modules/ or dist/ — they are in .gitignore
-- NEVER use `any` type in TypeScript — use `unknown` and narrow
 - NEVER inline styles — use design system / Tailwind classes
+- NEVER use barrel exports (index.ts re-exporting everything) — they break tree-shaking
 - Don't add npm packages without checking existing deps in package.json first

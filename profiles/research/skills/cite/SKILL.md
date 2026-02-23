@@ -2,6 +2,7 @@
 name: cite
 description: Fetch BibTeX entry from a DOI and add to bibliography
 argument-hint: "<DOI or URL>"
+context: fork
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---

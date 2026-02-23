@@ -14,7 +14,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path') && echo \"$FILE\" | grep -q '\\.py$' && ruff format \"$FILE\" 2>/dev/null && ruff check --fix \"$FILE\" 2>/dev/null || true"
+            "command": "FILE=$(jq -r '.tool_input.file_path') && echo \"$FILE\" | grep -q '\\.py$' && ruff check --fix \"$FILE\" 2>/dev/null && ruff format \"$FILE\" 2>/dev/null || true"
           }
         ]
       }

@@ -18,7 +18,7 @@ TODO_DESCRIPTION. Document generation and technical writing.
 - Verify all numbers match source data — use `/gen-all` then spot-check
 - Check page count hasn't changed unexpectedly
 
-## Style Guide
+## Design Guide
 - Colors: NAVY=#003366, ACCENT=#0066CC
 - Font: DejaVu Sans 9pt, DejaVu Sans Mono for numbers
 - Tables: navy header, alternating #f5f7fa rows
@@ -31,7 +31,7 @@ TODO_DESCRIPTION. Document generation and technical writing.
 - Brand terminology: follow brand guide (TODO: link)
 
 ## Gotchas
-- TODO: project-specific pitfalls (e.g. font rendering differences on Linux/macOS, page break positions)
+- TODO: e.g. DejaVu font missing on some systems, weasyprint page breaks shift with content changes, matplotlib figure DPI affects PDF layout
 
 ## Rules
 - NEVER hardcode financial numbers in generators — read from data source files

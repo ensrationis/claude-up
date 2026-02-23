@@ -2,6 +2,7 @@
 name: build
 description: Run production build and report bundle sizes
 argument-hint: "[--analyze]"
+context: fork
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---

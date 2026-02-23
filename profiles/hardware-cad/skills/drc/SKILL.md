@@ -2,6 +2,7 @@
 name: drc
 description: Run KiCad Design Rule Check on PCB
 argument-hint: "[file.kicad_pcb]"
+context: fork
 disable-model-invocation: true
 allowed-tools: Bash, Read, Grep
 ---

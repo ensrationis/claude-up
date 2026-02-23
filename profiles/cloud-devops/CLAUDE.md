@@ -27,7 +27,7 @@ TODO_DESCRIPTION. Infrastructure and deployment.
 - Secrets in .env files, never in docker-compose.yml
 
 ## Gotchas
-- TODO: project-specific pitfalls (e.g. SD card wear on RPi, port conflicts, DNS resolution quirks)
+- TODO: e.g. SD card corruption on power loss (RPi), systemd-resolved conflicts with Docker DNS, /tmp cleanup cron missing
 
 ## Rules
 - NEVER expose services to internet without reverse proxy — use Traefik/nginx

@@ -34,7 +34,7 @@ TODO_DESCRIPTION. Parametric CAD for hardware enclosures/parts.
 - OpenSCAD: `$fn=60` final, `$fn=30` preview
 
 ## Gotchas
-- TODO: project-specific pitfalls (e.g. specific part interference, print orientation issues)
+- TODO: e.g. overhang on back panel requires supports, heat insert holes need 0.2mm extra clearance after first print test
 
 ## Rules
 - NEVER use magic numbers — extract to named parameters at top of file

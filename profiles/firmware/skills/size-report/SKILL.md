@@ -2,6 +2,7 @@
 name: size-report
 description: Analyze firmware binary size and compare with previous builds
 argument-hint: "[environment]"
+context: fork
 disable-model-invocation: true
 allowed-tools: Bash, Read, Grep
 ---

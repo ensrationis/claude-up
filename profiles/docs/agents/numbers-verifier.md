@@ -1,7 +1,7 @@
 ---
 name: numbers-verifier
 description: Verifies that numbers in generated documents match source data
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob
 model: sonnet
 maxTurns: 30
 ---
@@ -18,3 +18,5 @@ Pay special attention to:
 - Team counts and roles
 - Product specifications (prices, BOM costs)
 - Dates and timelines
+
+Do NOT modify any files. Report discrepancies only.

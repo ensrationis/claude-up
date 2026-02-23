@@ -33,7 +33,7 @@ Firmware for TODO_DEVICE. PlatformIO + Arduino/ESP-IDF.
 - ISR handlers: minimal work, defer to task via queue
 
 ## Gotchas
-- TODO: project-specific pitfalls (e.g. GPIO conflicts, boot mode pins, brownout on flash)
+- TODO: e.g. GPIO12 is strapping pin on ESP32, brownout on heavy WiFi TX, watchdog timeout in blocking loops
 
 ## Rules
 - NEVER edit .pio/ directory — it's auto-generated

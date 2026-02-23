@@ -21,13 +21,12 @@ TODO_DESCRIPTION. Research, analysis, financial modeling.
 - All figures must regenerate cleanly from scripts
 
 ## Code Style
-- Type hints in all Python code
 - Reproducible: all figures generated from scripts, not manual
 - One sentence per line in .tex files (for clean git diffs)
 - All data sources documented in script docstrings
 
 ## Gotchas
-- TODO: project-specific pitfalls (e.g. Excel date formats, locale-dependent number parsing, LaTeX font issues)
+- TODO: e.g. pandas silently coerces date types, matplotlib backend on headless server, biber vs bibtex confusion
 
 ## Rules
 - NEVER hardcode data values — read from source files in data/

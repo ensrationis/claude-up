@@ -5,7 +5,14 @@ set -euo pipefail
 # Usage: claude-up [--profile <name>] [path]
 # Profiles: firmware, hardware-cad, cloud-devops, frontend, docs, research
 
-SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+# Resolve symlinks portably (works on macOS without coreutils)
+_source="${BASH_SOURCE[0]}"
+while [[ -L "$_source" ]]; do
+    _dir="$(cd "$(dirname "$_source")" && pwd -P)"
+    _source="$(readlink "$_source")"
+    [[ "$_source" != /* ]] && _source="$_dir/$_source"
+done
+SCRIPT_DIR="$(cd "$(dirname "$_source")" && pwd -P)"
 PROFILES_DIR="$SCRIPT_DIR/profiles"
 PROFILE=""
 FORCE=0
@@ -87,8 +94,8 @@ if [[ -f "$CLAUDE_MD" && $FORCE -eq 0 ]]; then
     echo "  SKIP: CLAUDE.md already exists"
 else
     if [[ -n "$PROFILE" ]]; then
-        # Copy profile CLAUDE.md, substitute project name
-        sed "s/TODO_PROJECT_NAME/$PROJECT_NAME/g" "$PROFILE_DIR/CLAUDE.md" > "$CLAUDE_MD"
+        # Copy profile CLAUDE.md, substitute project name (awk handles & / \ safely)
+        awk -v name="$PROJECT_NAME" '{gsub(/TODO_PROJECT_NAME/, name)}1' "$PROFILE_DIR/CLAUDE.md" > "$CLAUDE_MD"
         echo "  OK: CLAUDE.md (from profile: $PROFILE)"
     else
         cat > "$CLAUDE_MD" << EOF
@@ -161,6 +168,7 @@ if [[ -n "$PROFILE" && -d "$PROFILE_DIR/skills" ]]; then
         if [[ -d "$skill_dst" && $FORCE -eq 0 ]]; then
             _skills_skipped+=("$skill_name")
         else
+            rm -rf "$skill_dst"
             cp -r "$skill_src" "$skill_dst"
             _skills_added+=("$skill_name")
         fi
@@ -232,7 +240,7 @@ SKILL_EOF
 name: explore
 description: Research a topic in the codebase without polluting main context
 context: fork
-agent: Explore
+allowed-tools: Read, Grep, Glob
 ---
 Research the following in this codebase: $ARGUMENTS
 
@@ -253,7 +261,6 @@ name: changelog
 description: Generate a changelog from git commits since the last tag
 argument-hint: "[version]"
 context: fork
-agent: Explore
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---
@@ -312,7 +319,7 @@ else
     if [[ -f "$GITIGNORE" ]]; then
         # Remove old blanket .claude/ rule if present
         if grep -qxF '.claude/' "$GITIGNORE"; then
-            sed -i '/^# Claude Code$/d; /^\.claude\/$/d' "$GITIGNORE"
+            _tmp="$(mktemp)" && sed '/^# Claude Code$/d; /^\.claude\/$/d' "$GITIGNORE" > "$_tmp" && mv "$_tmp" "$GITIGNORE"
         fi
         [[ -s "$GITIGNORE" && "$(tail -c1 "$GITIGNORE")" != "" ]] && echo >> "$GITIGNORE"
         echo "" >> "$GITIGNORE"

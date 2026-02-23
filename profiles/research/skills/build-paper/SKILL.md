@@ -2,6 +2,7 @@
 name: build-paper
 description: Build LaTeX paper to PDF
 argument-hint: "[main.tex]"
+context: fork
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---

@@ -4,6 +4,7 @@ set -euo pipefail
 # claude-up — setup Claude Code for a repository
 # Usage: claude-up [--profile <name>] [--global] [path]
 # Profiles: firmware, hardware-cad, cloud-devops, frontend, docs, research
+VERSION="0.2.0"
 
 # Resolve symlinks portably (works on macOS without coreutils)
 _source="${BASH_SOURCE[0]}"
@@ -14,6 +15,7 @@ while [[ -L "$_source" ]]; do
 done
 SCRIPT_DIR="$(cd "$(dirname "$_source")" && pwd -P)"
 PROFILES_DIR="$SCRIPT_DIR/profiles"
+DEFAULTS_DIR="$SCRIPT_DIR/defaults"
 PROFILE=""
 FORCE=0
 
@@ -77,6 +79,10 @@ while [[ $# -gt 0 ]]; do
             done
             exit 0
             ;;
+        --version|-V)
+            echo "$VERSION"
+            exit 0
+            ;;
         --help|-h)
             echo "Usage: claude-up [--profile <name>] [path]"
             echo "       claude-up --global"
@@ -86,6 +92,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --force, -f           Overwrite existing files"
             echo "  --global, -g          Install global safety hooks to ~/.claude/settings.json"
             echo "  --list, -l            List available profiles"
+            echo "  --version, -V         Show version"
             echo "  --help, -h            Show this help"
             echo ""
             echo "Without --profile: creates generic CLAUDE.md template"
@@ -94,6 +101,10 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
+            if [[ "$1" == -* ]]; then
+                echo "Error: unknown option: $1"
+                exit 1
+            fi
             REPO_DIR="$1"
             shift
             ;;
@@ -121,6 +132,10 @@ REPO_DIR="$(cd "$REPO_DIR" 2>/dev/null && pwd)" || {
 
 PROJECT_NAME="$(basename "$REPO_DIR")"
 SETTINGS_DIR="$REPO_DIR/.claude"
+
+if [[ ! -d "$REPO_DIR/.git" ]]; then
+    echo "Warning: $REPO_DIR is not a git repository"
+fi
 
 if [[ -n "$PROFILE" ]]; then
     echo "Setting up Claude Code for: $REPO_DIR (profile: $PROFILE)"
@@ -175,22 +190,21 @@ EOF
     fi
 fi
 
-# 2. .claude/settings.local.json (personal, gitignored)
+# 2–3. .claude/settings (local + shared)
+mkdir -p "$SETTINGS_DIR"
+
 SETTINGS_LOCAL="$SETTINGS_DIR/settings.local.json"
 if [[ -f "$SETTINGS_LOCAL" && $FORCE -eq 0 ]]; then
     echo "  SKIP: .claude/settings.local.json already exists"
 else
-    mkdir -p "$SETTINGS_DIR"
     echo '{}' > "$SETTINGS_LOCAL"
     echo "  OK: .claude/settings.local.json"
 fi
 
-# 3. .claude/settings.json (team-shared, committable)
 SETTINGS_SHARED="$SETTINGS_DIR/settings.json"
 if [[ -f "$SETTINGS_SHARED" && $FORCE -eq 0 ]]; then
     echo "  SKIP: .claude/settings.json already exists"
 else
-    mkdir -p "$SETTINGS_DIR"
     if [[ -n "$PROFILE" && -f "$PROFILE_DIR/settings.json" ]]; then
         cp "$PROFILE_DIR/settings.json" "$SETTINGS_SHARED"
         echo "  OK: .claude/settings.json (from profile: $PROFILE)"
@@ -206,8 +220,8 @@ mkdir -p "$SKILLS_DIR"
 _skills_added=()
 _skills_skipped=()
 
+# Copy profile skills (if profile has them)
 if [[ -n "$PROFILE" && -d "$PROFILE_DIR/skills" ]]; then
-    # Copy each profile skill individually
     for skill_src in "$PROFILE_DIR/skills"/*/; do
         [[ -d "$skill_src" ]] || continue
         skill_name="$(basename "$skill_src")"
@@ -220,115 +234,21 @@ if [[ -n "$PROFILE" && -d "$PROFILE_DIR/skills" ]]; then
             _skills_added+=("$skill_name")
         fi
     done
-else
-    # Default skills: make-pr, review, commit, explore, changelog
-    for default_skill in make-pr review commit explore changelog; do
-        if [[ -d "$SKILLS_DIR/$default_skill" && $FORCE -eq 0 ]]; then
-            _skills_skipped+=("$default_skill")
-            continue
-        fi
-        mkdir -p "$SKILLS_DIR/$default_skill"
-        case "$default_skill" in
-            make-pr)
-                cat > "$SKILLS_DIR/make-pr/SKILL.md" << 'SKILL_EOF'
----
-name: make-pr
-description: Create a PR from current branch changes
-disable-model-invocation: true
----
-Create a PR for current changes: $ARGUMENTS
-
-1. Check git status, ensure working tree is clean (commit if needed)
-2. Push current branch to remote
-3. Create PR via `gh pr create` with descriptive title and summary
-SKILL_EOF
-                ;;
-            review)
-                cat > "$SKILLS_DIR/review/SKILL.md" << 'SKILL_EOF'
----
-name: review
-description: Review current changes for issues
-disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Bash
-context: fork
----
-Review all uncommitted and staged changes in this repository.
-
-1. Run `git diff` and `git diff --cached` to see all changes
-2. Check for: bugs, security issues, style violations, missing error handling
-3. Report findings with file:line references
-SKILL_EOF
-                ;;
-            commit)
-                cat > "$SKILLS_DIR/commit/SKILL.md" << 'SKILL_EOF'
----
-name: commit
-description: Stage and commit changes with a conventional commit message
-argument-hint: "[message hint]"
-disable-model-invocation: true
-allowed-tools: Bash, Read, Grep, Glob
----
-Commit current changes: $ARGUMENTS
-
-1. If nothing staged, identify changed files and stage them
-2. Review the diff of staged changes
-3. Generate a conventional commit message: `type(scope): description`
-4. Types: feat, fix, refactor, docs, test, chore, build, ci, perf
-5. Body: explain WHY, not WHAT
-6. If $ARGUMENTS contains a hint, incorporate it
-7. Create the commit, show result
-8. NEVER amend previous commits unless explicitly asked
-9. NEVER commit: .env, credentials*, secrets*, *.key, *.pem
-SKILL_EOF
-                ;;
-            explore)
-                cat > "$SKILLS_DIR/explore/SKILL.md" << 'SKILL_EOF'
----
-name: explore
-description: Research a topic in the codebase without polluting main context
-context: fork
-allowed-tools: Read, Grep, Glob
----
-Research the following in this codebase: $ARGUMENTS
-
-1. Use Glob and Grep to find all relevant files
-2. Read key files to understand the implementation
-3. Return a concise summary with:
-   - Key files involved (paths)
-   - How it works (3-5 bullet points)
-   - Dependencies and side effects
-   - Potential issues
-4. Do NOT modify any files
-SKILL_EOF
-                ;;
-            changelog)
-                cat > "$SKILLS_DIR/changelog/SKILL.md" << 'SKILL_EOF'
----
-name: changelog
-description: Generate a changelog from git commits since the last tag
-argument-hint: "[version]"
-context: fork
-disable-model-invocation: true
-allowed-tools: Bash, Read
----
-Generate a changelog: $ARGUMENTS
-
-## Context
-- Latest tag: !`git describe --tags --abbrev=0 2>/dev/null || echo "none"`
-- Commits since tag: !`git log $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD --oneline 2>/dev/null | head -50`
-
-## Instructions
-1. Read all commits from last tag to HEAD
-2. Categorize: Added, Changed, Fixed, Removed, Security
-3. Rewrite into user-facing language
-4. Skip merge/wip/fixup commits
-5. Output in Keep a Changelog format
-SKILL_EOF
-                ;;
-        esac
-        _skills_added+=("$default_skill")
-    done
 fi
+
+# Always add default skills (skip existing — profile or previous run)
+for skill_src in "$DEFAULTS_DIR/skills"/*/; do
+    [[ -d "$skill_src" ]] || continue
+    skill_name="$(basename "$skill_src")"
+    skill_dst="$SKILLS_DIR/$skill_name"
+    if [[ -d "$skill_dst" && $FORCE -eq 0 ]]; then
+        _skills_skipped+=("$skill_name")
+    else
+        rm -rf "$skill_dst"
+        cp -r "$skill_src" "$skill_dst"
+        _skills_added+=("$skill_name")
+    fi
+done
 
 [[ ${#_skills_added[@]} -gt 0 ]] && echo "  OK: skills added: ${_skills_added[*]}"
 [[ ${#_skills_skipped[@]} -gt 0 ]] && echo "  SKIP: skills exist: ${_skills_skipped[*]}"
@@ -340,7 +260,7 @@ mkdir -p "$AGENTS_DIR"
 _agents_added=()
 _agents_skipped=()
 
-# Profile-specific agents
+# Copy profile agents (if profile has them)
 if [[ -n "$PROFILE" && -d "$PROFILE_DIR/agents" ]]; then
     for agent_src in "$PROFILE_DIR/agents/"*.md; do
         [[ -f "$agent_src" ]] || continue
@@ -355,68 +275,17 @@ if [[ -n "$PROFILE" && -d "$PROFILE_DIR/agents" ]]; then
     done
 fi
 
-# Universal agents (always created): critic, observer
-for universal_agent in critic observer; do
-    agent_dst="$AGENTS_DIR/$universal_agent.md"
+# Always add default agents (skip existing)
+for agent_src in "$DEFAULTS_DIR/agents/"*.md; do
+    [[ -f "$agent_src" ]] || continue
+    agent_name="$(basename "$agent_src")"
+    agent_dst="$AGENTS_DIR/$agent_name"
     if [[ -f "$agent_dst" && $FORCE -eq 0 ]]; then
-        _agents_skipped+=("$universal_agent")
-        continue
+        _agents_skipped+=("${agent_name%.md}")
+    else
+        cp "$agent_src" "$agent_dst"
+        _agents_added+=("${agent_name%.md}")
     fi
-    case "$universal_agent" in
-        critic)
-            cat > "$agent_dst" << 'AGENT_EOF'
----
-name: critic
-description: Reviews recent changes for bugs, security issues, and code quality
-tools: Read, Grep, Glob, Bash
-model: sonnet
-maxTurns: 20
----
-Review all changes made during the current task.
-
-1. Run `git diff HEAD` to see uncommitted changes, or `git diff HEAD~1` if just committed
-2. For each changed file, check for:
-   - Logic errors, off-by-one, null/undefined access
-   - Security: injection, hardcoded secrets, unsafe operations
-   - Missing error handling at system boundaries (user input, APIs, file I/O)
-   - Performance: unbounded loops, N+1 queries, memory leaks, blocking calls
-3. Read CLAUDE.md — check Code Style violations
-4. Classify findings: CRITICAL (must fix) / WARNING (should fix) / NOTE (consider)
-5. Report with file:line references
-6. If no issues: explicitly state "No issues found"
-
-Do NOT modify any files. Report only.
-AGENT_EOF
-            ;;
-        observer)
-            cat > "$agent_dst" << 'AGENT_EOF'
----
-name: observer
-description: Verifies that work complies with project CLAUDE.md rules and conventions
-tools: Read, Grep, Glob, Bash
-model: sonnet
-maxTurns: 15
----
-Verify that recent changes comply with this project's CLAUDE.md.
-
-1. Read CLAUDE.md from the project root
-2. Run `git diff HEAD` (or `git diff HEAD~1` if just committed) to see changes
-3. Check every item in the Rules section — flag violations
-4. Check Code Style section — flag deviations
-5. Check Gotchas section — flag if any known pitfall was re-introduced
-6. Verify Architecture — new files are in correct directories
-7. If Testing section exists — confirm tests were updated/added for new code
-
-Report format:
-- PASS: <rule> — compliant
-- VIOLATION: <rule> — <what's wrong> at file:line
-- MISSING: <expected action not taken>
-
-Do NOT modify any files. Report only.
-AGENT_EOF
-            ;;
-    esac
-    _agents_added+=("$universal_agent")
 done
 
 [[ ${#_agents_added[@]} -gt 0 ]] && echo "  OK: agents added: ${_agents_added[*]}"
@@ -433,8 +302,8 @@ else
         if grep -qxF '.claude/' "$GITIGNORE"; then
             _tmp="$(mktemp "$GITIGNORE.XXXXXX")" && sed '/^# Claude Code$/d; /^\.claude\/$/d' "$GITIGNORE" > "$_tmp" && mv "$_tmp" "$GITIGNORE"
         fi
-        [[ -s "$GITIGNORE" && "$(tail -c1 "$GITIGNORE")" != "" ]] && echo >> "$GITIGNORE"
-        echo "" >> "$GITIGNORE"
+        [[ "$(tail -c1 "$GITIGNORE")" != "" ]] && echo >> "$GITIGNORE"
+        echo >> "$GITIGNORE"
     fi
     cat >> "$GITIGNORE" << 'EOF'
 # Claude Code (local only)

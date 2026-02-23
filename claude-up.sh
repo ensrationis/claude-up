@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # claude-up — setup Claude Code for a repository
-# Usage: claude-up [--profile <name>] [path]
+# Usage: claude-up [--profile <name>] [--global] [path]
 # Profiles: firmware, hardware-cad, cloud-devops, frontend, docs, research
 
 # Resolve symlinks portably (works on macOS without coreutils)
@@ -33,6 +33,42 @@ while [[ $# -gt 0 ]]; do
             FORCE=1
             shift
             ;;
+        --global|-g)
+            # Install global safety hooks to ~/.claude/settings.json
+            GLOBAL_SRC="$SCRIPT_DIR/global/settings.json"
+            GLOBAL_DST="$HOME/.claude/settings.json"
+            if [[ ! -f "$GLOBAL_SRC" ]]; then
+                echo "Error: global/settings.json not found in $SCRIPT_DIR"
+                exit 1
+            fi
+            mkdir -p "$HOME/.claude"
+            if [[ -f "$GLOBAL_DST" ]]; then
+                echo "Current global settings: $GLOBAL_DST"
+                echo ""
+                echo "This will REPLACE it with safety hooks from claude-up."
+                echo "Hooks: block destructive commands, protect secrets, desktop notifications."
+                echo ""
+                printf "Overwrite? [y/N] "
+                read -r answer
+                if [[ "$answer" != "y" && "$answer" != "Y" ]]; then
+                    echo "Aborted."
+                    exit 0
+                fi
+                # Backup existing
+                cp "$GLOBAL_DST" "$GLOBAL_DST.backup.$(date +%s)"
+                echo "  Backup: $GLOBAL_DST.backup.*"
+            fi
+            cp "$GLOBAL_SRC" "$GLOBAL_DST"
+            echo "  OK: $GLOBAL_DST"
+            echo ""
+            echo "Installed global hooks:"
+            echo "  - PreToolUse/Bash: blocks destructive commands (rm -rf, git push --force, etc.)"
+            echo "  - PreToolUse/Edit|Write: blocks editing secrets (.env, .pem, .key)"
+            echo "  - Notification: desktop alerts when Claude needs input"
+            echo ""
+            echo "Restart all Claude sessions to apply."
+            exit 0
+            ;;
         --list|-l)
             echo "Available profiles:"
             for d in "$PROFILES_DIR"/*/; do
@@ -43,15 +79,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --help|-h)
             echo "Usage: claude-up [--profile <name>] [path]"
+            echo "       claude-up --global"
             echo ""
             echo "Options:"
             echo "  --profile, -p <name>  Apply role profile (firmware, hardware-cad, etc.)"
             echo "  --force, -f           Overwrite existing files"
+            echo "  --global, -g          Install global safety hooks to ~/.claude/settings.json"
             echo "  --list, -l            List available profiles"
             echo "  --help, -h            Show this help"
             echo ""
             echo "Without --profile: creates generic CLAUDE.md template"
             echo "With --profile: copies role-specific CLAUDE.md, settings, skills, agents"
+            echo "With --global: installs safety hooks that protect ALL projects"
             exit 0
             ;;
         *)

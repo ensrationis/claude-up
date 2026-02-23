@@ -7,6 +7,9 @@ Setup Claude Code for any repository in one command. Role-based profiles for tea
 ```bash
 git clone <repo-url> ~/claude-up
 ln -s ~/claude-up/claude-up.sh ~/.local/bin/claude-up
+
+# Install global safety hooks (once per machine)
+claude-up --global
 ```
 
 Make sure `~/.local/bin` is in your PATH.
@@ -175,48 +178,25 @@ Each profile includes:
 - **PostToolUse hook**: auto-format on save (clang-format, prettier, or ruff depending on profile)
 - **SessionStart hook**: after context compaction, injects git log and diff so Claude retains history
 
-## Global safety
+## Global safety hooks
 
-Recommended addition to `~/.claude/settings.json` (protects all projects):
-
-```json
-{
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "CMD=$(jq -r '.tool_input.command') && echo \"$CMD\" | grep -qEi '(rm\\s+(-\\w*r\\w*\\s+)*-\\w*f|rm\\s+(-\\w*f\\w*\\s+)*-\\w*r|rm\\s+-\\w*rf|rm\\s+-\\w*fr|rm\\s+--recursive|rm\\s+--force|git\\s+push\\s+.*(-f|--force)\\b|git\\s+reset\\s+--hard|git\\s+clean\\s+-[fdx]|git\\s+checkout\\s+\\.$|git\\s+restore\\s+\\.$|chmod\\s+-R\\s+777|mkfs\\.|dd\\s+(if|of)=)' && echo \"Blocked: destructive command detected\" >&2 && exit 2 || exit 0"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "FILE=$(jq -r '.tool_input.file_path // empty') && echo \"$FILE\" | grep -qEi '(\\.env$|\\.env\\.|credentials|secrets|\\.pem$|\\.key$|id_rsa($|[^.])|\\.git/)' && echo \"Blocked: $FILE is a protected file\" >&2 && exit 2 || exit 0"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "permission_prompt",
-        "hooks": [{"type": "command", "command": "notify-send 'Claude Code' 'Permission needed' --urgency=critical"}]
-      },
-      {
-        "matcher": "idle_prompt",
-        "hooks": [{"type": "command", "command": "notify-send 'Claude Code' 'Waiting for input'"}]
-      }
-    ]
-  }
-}
+```bash
+claude-up --global
 ```
 
-This blocks destructive commands (`rm -rf`, `git push --force`, `git reset --hard`), prevents editing secrets (`.env`, `.pem`, `.key`), and sends desktop notifications when Claude needs input.
+Installs `~/.claude/settings.json` with safety hooks that protect **all** projects on the machine:
+
+| Hook | What it blocks |
+|------|---------------|
+| PreToolUse / Bash | `rm -rf`, `git push --force`, `git reset --hard`, `git clean`, `chmod -R 777`, `dd` |
+| PreToolUse / Edit\|Write | `.env`, `.pem`, `.key`, `credentials`, `secrets`, `.git/` |
+| Notification | Desktop alerts when Claude needs permission or is idle |
+
+The source file is `global/settings.json` in this repo. Edit it, commit, `claude-up --global` again to update.
+
+If `~/.claude/settings.json` already exists, the script asks before overwriting and creates a timestamped backup.
+
+Requires `jq` and `notify-send` (Linux). On macOS replace `notify-send` with `osascript -e 'display notification ...'` in `global/settings.json`.
 
 ## Creating a custom profile
 
@@ -235,6 +215,8 @@ cp profiles/firmware/settings.json profiles/my-profile/settings.json
 claude-up/
 ├── claude-up.sh          # Main script
 ├── PRACTICES.md          # Best practices reference (ru)
+├── global/
+│   └── settings.json     # Global safety hooks (installed via --global)
 └── profiles/
     ├── firmware/
     │   ├── CLAUDE.md
@@ -256,6 +238,7 @@ claude-up [options] [path]
 Options:
   --profile, -p <name>   Apply role profile
   --force, -f            Overwrite existing files
+  --global, -g           Install global safety hooks to ~/.claude/settings.json
   --list, -l             List available profiles
   --help, -h             Show help
 

@@ -1,0 +1,44 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(jq -r '.tool_input.command') && echo \"$CMD\" | grep -qEi '(rm\\s+(-\\w*r\\w*\\s+)*-\\w*f|rm\\s+(-\\w*f\\w*\\s+)*-\\w*r|rm\\s+-\\w*rf|rm\\s+-\\w*fr|rm\\s+--recursive|rm\\s+--force|git\\s+push\\s+.*(-f|--force)\\b|git\\s+reset\\s+--hard|git\\s+clean\\s+-[fdx]|git\\s+checkout\\s+\\.$|git\\s+restore\\s+\\.$|chmod\\s+-R\\s+777|mkfs\\.|dd\\s+(if|of)=)' && echo \"Blocked: destructive command detected: $CMD\" >&2 && exit 2 || exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path // empty') && echo \"$FILE\" | grep -qEi '(\\.env$|\\.env\\.|credentials|secrets|\\.pem$|\\.key$|id_rsa($|[^.])|\\.git/)' && echo \"Blocked: $FILE is a protected file\" >&2 && exit 2 || exit 0"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Permission needed' --urgency=critical"
+          }
+        ]
+      },
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Waiting for input'"
+          }
+        ]
+      }
+    ]
+  }
+}

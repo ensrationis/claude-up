@@ -74,7 +74,18 @@ claude-up --profile research .       # +4 research skills, +1 agent
 
 ### CLAUDE.md
 
-Template with project-specific sections (Description, Tech Stack, Structure, Commands, Rules). All contain `TODO` placeholders to fill in.
+Template with sections based on [Anthropic's best practices](https://code.claude.com/docs/en/best-practices). All contain `TODO` placeholders to fill in:
+
+| Section | Purpose | Why it matters |
+|---------|---------|----------------|
+| **Architecture** | Key directories and their roles | Orients Claude without scanning the whole repo |
+| **Commands** | Exact build, test, lint, deploy commands | Highest-impact section — Claude cannot guess these |
+| **Testing** | How to verify changes, run single tests | "Single highest-leverage thing" per Anthropic docs |
+| **Code Style** | Only deviations from language defaults | Claude already knows standard conventions |
+| **Gotchas** | Non-obvious behaviors, known pitfalls | Impossible to infer from code, saves most time |
+| **Rules** | Hard constraints with positive alternatives | "NEVER X — use Y instead" format for better adherence |
+
+Profiles add domain-specific sections where needed (Hardware for firmware, Style Guide for docs, etc.).
 
 ### settings.json
 
@@ -92,9 +103,10 @@ Reviewer subagents (model: sonnet, maxTurns: 30, read-only tools). Claude delega
 
 ## After setup
 
-1. Open `CLAUDE.md` and replace all `TODO` entries with actual project info
-2. Run `claude` in the repo -- skills and agents are active immediately
-3. Try `/review` to review uncommitted changes, `/commit` to commit with a conventional message
+1. Open `CLAUDE.md` and replace all `TODO` entries — especially **Commands** and **Gotchas**
+2. Keep it under 60-150 lines. Move specialized knowledge to `.claude/rules/*.md` or skills
+3. Run `claude` in the repo — skills and agents are active immediately
+4. Try `/review` to review changes, `/commit` to commit with a conventional message
 
 ## Global safety
 

@@ -113,8 +113,9 @@ if [[ -n "$PROFILE" ]]; then
 fi
 
 # Resolve to absolute path
+_orig_dir="$REPO_DIR"
 REPO_DIR="$(cd "$REPO_DIR" 2>/dev/null && pwd)" || {
-    echo "Error: directory not found"
+    echo "Error: directory not found: $_orig_dir"
     exit 1
 }
 
@@ -430,7 +431,7 @@ else
     if [[ -f "$GITIGNORE" ]]; then
         # Remove old blanket .claude/ rule if present
         if grep -qxF '.claude/' "$GITIGNORE"; then
-            _tmp="$(mktemp)" && sed '/^# Claude Code$/d; /^\.claude\/$/d' "$GITIGNORE" > "$_tmp" && mv "$_tmp" "$GITIGNORE"
+            _tmp="$(mktemp "$GITIGNORE.XXXXXX")" && sed '/^# Claude Code$/d; /^\.claude\/$/d' "$GITIGNORE" > "$_tmp" && mv "$_tmp" "$GITIGNORE"
         fi
         [[ -s "$GITIGNORE" && "$(tail -c1 "$GITIGNORE")" != "" ]] && echo >> "$GITIGNORE"
         echo "" >> "$GITIGNORE"

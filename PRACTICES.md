@@ -217,17 +217,17 @@ Create a PR for current changes: $ARGUMENTS
 4. Create PR via `gh pr create`
 ```
 
-**Доменное знание: Robonomics contracts:**
+**Доменное знание проекта (пример):**
 ```markdown
 ---
-name: robonomics-contracts
-description: Robonomics v5 contract architecture and addresses
+name: project-contracts
+description: Smart contract architecture and deployed addresses
 user-invocable: false
 ---
-# Robonomics v5 Contracts
+# Project Contracts
 - Factory: 0x...
-- Lighthouse: 0x...
-- XRT: 0x...
+- Registry: 0x...
+- Token: 0x...
 [контрактная архитектура, ABI-специфика]
 ```
 

@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pio *)",
+      "Bash(esphome *)",
+      "Bash(idf.py *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path') && echo \"$FILE\" | grep -qE '\\.(c|cpp|h|hpp|ino)$' && clang-format -i \"$FILE\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- Post-compaction context ---' && git log --oneline -10 2>/dev/null && echo '--- Uncommitted changes ---' && git diff --stat HEAD 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

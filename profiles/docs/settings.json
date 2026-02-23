@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 gen_*)",
+      "Bash(python3 calc_*)",
+      "Bash(python3 -m weasyprint *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path') && echo \"$FILE\" | grep -q '\\.py$' && ruff format \"$FILE\" 2>/dev/null && ruff check --fix \"$FILE\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- Post-compaction context ---' && git log --oneline -10 2>/dev/null && echo '--- Uncommitted changes ---' && git diff --stat HEAD 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      "Bash(ssh *)",
+      "Bash(ansible *)",
+      "Bash(systemctl status *)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '--- Post-compaction context ---' && git log --oneline -10 2>/dev/null && echo '--- Docker status ---' && docker ps --format 'table {{.Names}}\\t{{.Status}}' 2>/dev/null && echo '--- Uncommitted changes ---' && git diff --stat HEAD 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

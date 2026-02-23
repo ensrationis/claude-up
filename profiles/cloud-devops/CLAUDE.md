@@ -2,29 +2,35 @@
 
 TODO_DESCRIPTION. Infrastructure and deployment.
 
-## Tech Stack
-- Containers: Docker / Docker Compose
+## Architecture
 - Nodes: TODO (e.g. Raspberry Pi 4B, Orange Pi, OVHcloud VPS)
 - Services: TODO (Home Assistant, Mosquitto, IPFS, Prometheus)
 - Network: TODO (WireGuard, libp2p, Zigbee2MQTT)
+- TODO: VLAN map, IP addresses, topology
 
 ## Commands
-- Deploy: TODO
+- Deploy: TODO (e.g. `docker-compose up -d`)
 - Status: `docker ps`
 - Logs: `docker logs <service> --tail 100 -f`
 - SSH: TODO (e.g. `ssh node-name`)
+- Restart: TODO (e.g. `docker-compose restart <service>`)
 
-## Network
-- TODO: VLAN map, IP addresses, topology
+## Testing
+- After deploy: verify health checks pass (`docker inspect --format='{{.State.Health.Status}}' <container>`)
+- Test changes on staging node first, then propagate to production
+- Check `docker ps` — all expected containers must be running
 
-## Conventions
+## Code Style
 - All configs in YAML where possible
-- Secrets in .env files (NEVER commit)
 - One service per container
 - Health checks on all critical services
+- Secrets in .env files, never in docker-compose.yml
+
+## Gotchas
+- TODO: project-specific pitfalls (e.g. SD card wear on RPi, port conflicts, DNS resolution quirks)
 
 ## Rules
-- NEVER expose services directly to internet without reverse proxy
+- NEVER expose services to internet without reverse proxy — use Traefik/nginx
 - NEVER modify configs on nodes directly — use deployment scripts
-- NEVER commit .env files, credentials, or private keys
-- Test changes on staging node first, then propagate
+- NEVER commit .env files, credentials, or private keys — use .gitignore
+- NEVER run `rm -rf` on nodes — use targeted cleanup commands

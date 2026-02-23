@@ -7,27 +7,36 @@ Firmware for TODO_DEVICE. PlatformIO + Arduino/ESP-IDF.
 - Peripherals: TODO (sensors, displays, radios)
 - Interfaces: TODO (I2C, SPI, UART, MQTT)
 
-## Commands
-- Build: `pio run`
-- Flash: `pio run -t upload`
-- Monitor: `pio device monitor -b 115200`
-- Test (native): `pio test -e native`
-- Clean: `pio run -t clean`
-
-## Structure
+## Architecture
 - src/          — application code
 - lib/          — local libraries
 - include/      — public headers
 - test/         — native tests (Unity)
 
-## Conventions
-- platformio.ini is the single source of truth for dependencies and build flags
+## Commands
+- Build: `pio run`
+- Flash: `pio run -t upload`
+- Monitor: `pio device monitor -b 115200`
+- Test single: `pio test -e native -f test_<name>`
+- Test all: `pio test -e native`
+- Clean: `pio run -t clean`
+
+## Testing
+- Framework: Unity (via PlatformIO native test runner)
+- Run `pio test -e native` after every code change
+- New modules require matching test_*.cpp in test/
+
+## Code Style
+- platformio.ini is the single source of truth for deps and build flags
 - All config constants in a single header (e.g. src/config.h)
 - MQTT topics: `device-name/sensor/<metric>`
 - ISR handlers: minimal work, defer to task via queue
 
+## Gotchas
+- TODO: project-specific pitfalls (e.g. GPIO conflicts, boot mode pins, brownout on flash)
+
 ## Rules
-- NEVER edit .pio/ directory contents
-- NEVER use String concatenation in loops (RAM fragmentation)
+- NEVER edit .pio/ directory — it's auto-generated
+- NEVER use String concatenation in loops — use char[] or snprintf instead (RAM fragmentation)
 - NEVER hardcode WiFi credentials — use config header or NVS
-- Don't add lib_deps without checking platformio.ini first
+- Don't add lib_deps manually — edit platformio.ini

@@ -94,23 +94,28 @@ else
         cat > "$CLAUDE_MD" << EOF
 # Project: $PROJECT_NAME
 
-## Description
-TODO: Описание проекта
+TODO: одна строка — что делает проект и на чём написан.
 
-## Tech Stack
-TODO: Языки, фреймворки, ключевые зависимости
-
-## Structure
-TODO: Ключевые директории и файлы
-
-## Conventions
-TODO: Стиль кода, именование, паттерны
+## Architecture
+TODO: ключевые директории и их назначение
 
 ## Commands
-TODO: Сборка, тесты, деплой
+- Build: TODO
+- Test single: TODO
+- Test all: TODO
+- Lint: TODO
+
+## Testing
+TODO: фреймворк, как запустить один тест, когда запускать
+
+## Code Style
+TODO: только то, что отличается от стандартов языка
+
+## Gotchas
+TODO: подводные камни проекта, неочевидное поведение
 
 ## Rules
-TODO: Что Claude НИКОГДА не должен делать в этом проекте
+TODO: что Claude НИКОГДА не должен делать (с альтернативами)
 EOF
         echo "  OK: CLAUDE.md"
     fi

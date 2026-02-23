@@ -77,27 +77,35 @@ After running `claude-up` on a project where Claude is already running:
 
 - **settings.json** — permissions and hooks are loaded at session start. Exit Claude (`/exit` or Ctrl+C) and start a new session.
 
-### Recommended migration sequence
-
-For a project where Claude sessions are already active:
+### Without restart (session running for hours, don't want to lose context)
 
 ```bash
-# 1. Run claude-up from a separate terminal
+# 1. From a separate terminal:
 claude-up --profile firmware /path/to/project
-
-# 2. Fill in CLAUDE.md (especially Commands, Gotchas, Rules)
-$EDITOR /path/to/project/CLAUDE.md
-
-# 3. In the active Claude session — restart to pick up settings.json
-/exit
-cd /path/to/project && claude
-
-# 4. Verify everything loaded
-/flash --help        # skill works?
-# Give Claude a task — @critic and @observer should run after it completes
+$EDITOR /path/to/project/CLAUDE.md   # fill in TODOs
 ```
 
-If you don't want to restart, the minimum is: edit `CLAUDE.md`, add skills/agents. Claude will see `CLAUDE.md` changes and new agents immediately. Only hooks and permissions need a restart.
+Then in the active Claude session, type:
+
+```
+прочитай CLAUDE.md и следуй инструкциям из него
+```
+
+Claude will re-read CLAUDE.md and pick up the rules, style, workflow. Skills and agents are also available immediately — type `/` to see them. The only thing missing is hooks and permissions from `settings.json` — those load at session start.
+
+### With restart (clean slate)
+
+```bash
+# 1. From a separate terminal:
+claude-up --profile firmware /path/to/project
+$EDITOR /path/to/project/CLAUDE.md   # fill in TODOs
+
+# 2. In the active Claude session:
+/exit
+
+# 3. Start fresh — everything loads:
+cd /path/to/project && claude
+```
 
 ### Context compaction
 

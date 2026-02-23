@@ -123,6 +123,13 @@ TODO: подводные камни проекта, неочевидное по�
 
 ## Rules
 TODO: что Claude НИКОГДА не должен делать (с альтернативами)
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).
 EOF
         echo "  OK: CLAUDE.md"
     fi
@@ -293,6 +300,7 @@ mkdir -p "$AGENTS_DIR"
 _agents_added=()
 _agents_skipped=()
 
+# Profile-specific agents
 if [[ -n "$PROFILE" && -d "$PROFILE_DIR/agents" ]]; then
     for agent_src in "$PROFILE_DIR/agents/"*.md; do
         [[ -f "$agent_src" ]] || continue
@@ -306,6 +314,70 @@ if [[ -n "$PROFILE" && -d "$PROFILE_DIR/agents" ]]; then
         fi
     done
 fi
+
+# Universal agents (always created): critic, observer
+for universal_agent in critic observer; do
+    agent_dst="$AGENTS_DIR/$universal_agent.md"
+    if [[ -f "$agent_dst" && $FORCE -eq 0 ]]; then
+        _agents_skipped+=("$universal_agent")
+        continue
+    fi
+    case "$universal_agent" in
+        critic)
+            cat > "$agent_dst" << 'AGENT_EOF'
+---
+name: critic
+description: Reviews recent changes for bugs, security issues, and code quality
+tools: Read, Grep, Glob, Bash
+model: sonnet
+maxTurns: 20
+---
+Review all changes made during the current task.
+
+1. Run `git diff HEAD` to see uncommitted changes, or `git diff HEAD~1` if just committed
+2. For each changed file, check for:
+   - Logic errors, off-by-one, null/undefined access
+   - Security: injection, hardcoded secrets, unsafe operations
+   - Missing error handling at system boundaries (user input, APIs, file I/O)
+   - Performance: unbounded loops, N+1 queries, memory leaks, blocking calls
+3. Read CLAUDE.md — check Code Style violations
+4. Classify findings: CRITICAL (must fix) / WARNING (should fix) / NOTE (consider)
+5. Report with file:line references
+6. If no issues: explicitly state "No issues found"
+
+Do NOT modify any files. Report only.
+AGENT_EOF
+            ;;
+        observer)
+            cat > "$agent_dst" << 'AGENT_EOF'
+---
+name: observer
+description: Verifies that work complies with project CLAUDE.md rules and conventions
+tools: Read, Grep, Glob, Bash
+model: sonnet
+maxTurns: 15
+---
+Verify that recent changes comply with this project's CLAUDE.md.
+
+1. Read CLAUDE.md from the project root
+2. Run `git diff HEAD` (or `git diff HEAD~1` if just committed) to see changes
+3. Check every item in the Rules section — flag violations
+4. Check Code Style section — flag deviations
+5. Check Gotchas section — flag if any known pitfall was re-introduced
+6. Verify Architecture — new files are in correct directories
+7. If Testing section exists — confirm tests were updated/added for new code
+
+Report format:
+- PASS: <rule> — compliant
+- VIOLATION: <rule> — <what's wrong> at file:line
+- MISSING: <expected action not taken>
+
+Do NOT modify any files. Report only.
+AGENT_EOF
+            ;;
+    esac
+    _agents_added+=("$universal_agent")
+done
 
 [[ ${#_agents_added[@]} -gt 0 ]] && echo "  OK: agents added: ${_agents_added[*]}"
 [[ ${#_agents_skipped[@]} -gt 0 ]] && echo "  SKIP: agents exist: ${_agents_skipped[*]}"

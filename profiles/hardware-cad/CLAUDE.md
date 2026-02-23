@@ -41,3 +41,10 @@ TODO_DESCRIPTION. Parametric CAD for hardware enclosures/parts.
 - NEVER modify mounting hole positions without asking — other parts depend on them
 - All holes must account for printer tolerance (+0.2mm radius)
 - Keep parts within printer build volume (check CLAUDE.md Hardware section)
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).

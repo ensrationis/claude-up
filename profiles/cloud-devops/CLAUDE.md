@@ -34,3 +34,10 @@ TODO_DESCRIPTION. Infrastructure and deployment.
 - NEVER modify configs on nodes directly — use deployment scripts
 - NEVER commit .env files, credentials, or private keys — use .gitignore
 - NEVER run `rm -rf` on nodes — use targeted cleanup commands
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).

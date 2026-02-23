@@ -34,3 +34,10 @@ TODO_DESCRIPTION. Web application / dApp.
 - NEVER inline styles — use design system / Tailwind classes
 - NEVER use barrel exports (index.ts re-exporting everything) — they break tree-shaking
 - Don't add npm packages without checking existing deps in package.json first
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).

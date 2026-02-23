@@ -40,7 +40,7 @@ your-repo/
 │   ├── settings.json                # Permissions, hooks (shared via git)
 │   ├── settings.local.json          # Personal settings (gitignored)
 │   ├── skills/                      # Slash commands (/commit, /review, ...)
-│   └── agents/                      # Subagents (reviewers)
+│   └── agents/                      # Subagents (critic, observer, reviewer)
 └── .gitignore                       # Protects settings.local.json
 ```
 
@@ -58,6 +58,8 @@ Plus project memory at `~/.claude/projects/<encoded-path>/memory/MEMORY.md`.
 | `research` | Python, LaTeX, Monte Carlo | `/run-model`, `/build-paper`, `/cite`, `/figure` | paper-reviewer |
 
 Without `--profile`, you get 5 universal skills: `/make-pr`, `/review`, `/commit`, `/explore`, `/changelog`.
+
+Every project also gets two universal agents: **@critic** (code quality review) and **@observer** (CLAUDE.md compliance check).
 
 ## Profiles can be layered
 
@@ -84,8 +86,9 @@ Template with sections based on [Anthropic's best practices](https://code.claude
 | **Code Style** | Only deviations from language defaults | Claude already knows standard conventions |
 | **Gotchas** | Non-obvious behaviors, known pitfalls | Impossible to infer from code, saves most time |
 | **Rules** | Hard constraints with positive alternatives | "NEVER X — use Y instead" format for better adherence |
+| **Workflow** | When to run @critic and @observer agents | Automated quality gate after every implementation task |
 
-Profiles add domain-specific sections where needed (Hardware for firmware, Style Guide for docs, etc.).
+Profiles add domain-specific sections where needed (Hardware for firmware, Design Guide for docs, etc.).
 
 ### settings.json
 
@@ -99,7 +102,12 @@ Slash commands invoked via `/skill-name` in Claude Code. Each skill has `argumen
 
 ### Agents
 
-Reviewer subagents (model: sonnet, maxTurns: 30, read-only tools). Claude delegates review tasks to them automatically based on the `description` field.
+Two types:
+
+- **Universal** (all projects): `@critic` (reviews changes for bugs/security), `@observer` (checks CLAUDE.md compliance)
+- **Profile-specific**: domain reviewer (firmware-reviewer, cad-reviewer, etc.) with maxTurns: 30
+
+All agents use model: sonnet and read-only tools. The Workflow section in CLAUDE.md instructs Claude to run @critic and @observer after every non-trivial task.
 
 ## After setup
 

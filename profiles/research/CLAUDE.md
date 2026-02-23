@@ -33,3 +33,10 @@ TODO_DESCRIPTION. Research, analysis, financial modeling.
 - NEVER modify input data files without asking — others depend on them
 - NEVER commit large binary files (xlsx > 10MB, datasets) — use .gitignore
 - NEVER fabricate citation data — fetch from DOI or copy from source
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).

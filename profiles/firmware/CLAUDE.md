@@ -40,3 +40,10 @@ Firmware for TODO_DEVICE. PlatformIO + Arduino/ESP-IDF.
 - NEVER use String concatenation in loops — use char[] or snprintf instead (RAM fragmentation)
 - NEVER hardcode WiFi credentials — use config header or NVS
 - Don't add lib_deps manually — edit platformio.ini
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).

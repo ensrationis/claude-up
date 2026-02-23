@@ -38,3 +38,10 @@ TODO_DESCRIPTION. Document generation and technical writing.
 - NEVER change color scheme without updating all generators consistently
 - NEVER commit generated PDFs to git — add output/ to .gitignore
 - After generation, verify numbers match source — discrepancies are critical bugs
+
+## Workflow
+After completing any implementation task (code changes, config edits, multi-file work):
+1. Spawn **@critic** agent in background — reviews changes for bugs, security, quality
+2. Spawn **@observer** agent in background — verifies compliance with rules above
+3. Report agent findings to the user before marking task done
+Skip for trivial tasks (typo fixes, single-line edits, questions).

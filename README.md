@@ -252,3 +252,7 @@ Options:
 
 # Default: current directory, no profile (5 universal skills + 2 agents)
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Sergei Lonshakov
